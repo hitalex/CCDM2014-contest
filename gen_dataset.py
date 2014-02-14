@@ -14,9 +14,9 @@ def main():
         r = random()
         # 训练集：测试集 = 4：1
         if r < 0.2:
-            ftest.write(line + '\n')
+            ftest.write(line)
         else:
-            ftrain.write(line + '\n')
+            ftrain.write(line)
             
     f.close()
     ftrain.close()
