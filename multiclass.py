@@ -17,7 +17,6 @@ import numpy as np
 
 from sklearn.metrics import accuracy_score, f1_score, classification_report
     
-    
 def multiclass(model_train_data, label_train, model_test_data, label_test, train_data, label, test_data, Classifier, **kwargs):
     """ 
     Classifier: the classifier class
@@ -52,7 +51,7 @@ def OneVSRest(model_train_data, label_train, model_test_data, label_test, train_
 def main(n_components):
     print 'Load dataset...'
     import pickle
-    f = open('dataset/task2-PCA.pickle', 'r')
+    f = open('task2-dataset/task2-PCA.pickle', 'r')
     model_train_data, label_train, model_test_data, label_test, test_data = pickle.load(f)
     f.close()
     
