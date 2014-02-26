@@ -9,7 +9,7 @@
 
 import numpy as np
 
-def PCA(model_train_data, model_test_data, test_data):
+def PCA(train_feature, test_feature, mat_file_path):
     """ Unsupervised dimension reduction
     Note: 由于scikit-learn中PCA无法针对目前的训练集进行PCA分解，所以这里采用matlab的分解结果
     """
@@ -25,15 +25,14 @@ def PCA(model_train_data, model_test_data, test_data):
     """
     # 读入mat文件
     import scipy.io
-    mat_dict = scipy.io.loadmat('dataset/task2-PCA-decomp.mat')
+    mat_dict = scipy.io.loadmat(mat_file_path)
     W = np.asmatrix(mat_dict['COEFF'])
-    X_transformed = np.asmatrix(mat_dict['SCORE']) # 已经转换好的
     
-    model_train_data2 = X_transformed
-    model_test_data2 = np.asmatrix(model_test_data) * W
-    test_data2 = np.asmatrix(test_data) * W
+    # train_feature_transformed 包含所有的训练数据
+    train_feature_transformed = np.asmatrix(mat_dict['SCORE']) # 已经转换好的
+    test_feature_transformed = np.asmatrix(test_feature) * W
     
-    return model_train_data2, model_test_data2, test_data2
+    return train_feature_transformed, test_feature_transformed
     
 def main():
     print 'Loading dataset...'
@@ -55,7 +54,8 @@ def main():
     #n_components = 100
 
     dr_method = 'PCA'
-    model_train_data2, model_test_data2, test_data2 = PCA(model_train_data, model_test_data, test_data)
+    mat_file_path = 'task1-dataset/task1-PCA-decomp.mat'
+    model_train_data2, model_test_data2, test_data2 = PCA(model_train_data, model_test_data, test_data, mat_file_path)
         
     # 保存降维后的结果
     print 'Saving new datasets...'
