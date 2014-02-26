@@ -40,6 +40,7 @@ def main():
     # remove the first line
     test_feature = test_feature[:, 1:]
     # prepare the numpy format
+    train_feature = train_data[:, :129]
     train_label = train_data[:, 129:]
     train_label[train_label == -1] = 0 # zero elements indicate do not belong to the class
     
@@ -59,11 +60,11 @@ def main():
     print 'Number of samples in each class:', p
     print '属于i个类的样本个数：', num_class_membership
     
-    model_train_feature, model_train_label, model_test_feature, model_test_label = split_model_dataset(train_data)
+    #model_train_feature, model_train_label, model_test_feature, model_test_label = split_model_dataset(train_data)
     
     f = open('task1-dataset/task1-dataset.pickle', 'w')
     import pickle
-    pickle.dump([model_train_feature, model_train_label, model_test_feature, model_test_label, test_feature], f)
+    pickle.dump([train_feature, train_label, test_feature], f)
     f.close()
     
 if __name__ == '__main__':
