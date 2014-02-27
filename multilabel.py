@@ -6,6 +6,8 @@ Task1: Multi-label task
 
 import numpy as np
 
+from dimension_reduction import PCA
+
 def average_precision(outputs, test_target):
     """ Example-based AP for multilable classification
     outputs: shape=n, num_class, probility prediction
@@ -19,7 +21,8 @@ def average_precision(outputs, test_target):
     for i in range(num_instance):
         # sort prediction prob. 
         tmp = outputs[i, :]
-        index = list(np.argsort(tmp)) # [tempvalue,index] = sort(temp)
+        # decending order
+        index = list(np.argsort(-1 * tmp)) # [tempvalue,index] = sort(temp)
         
         indicator = np.array([0] * num_class, int)
         # Which and how many classes does this sample belong to ?
@@ -27,15 +30,15 @@ def average_precision(outputs, test_target):
         label_size = len(label_list)
         for m in range(label_size):
             label = label_list[m]
-            loc = index.index(label)
+            loc = index[label]
             indicator[loc] = 1
             
         summary = 0
         for m in range(label_size):
             label = label_list[m]
-            loc = index.index(label)
-            summary = summary + sum(indicator[loc:num_class]) * 1.0 / (num_class-loc+1)
-            #summary = summary + sum(indicator[:loc+1]) * 1.0 / (loc+1)
+            loc = index[label]
+            #summary = summary + sum(indicator[loc:num_class]) * 1.0 / (num_class-loc+1)
+            summary = summary + sum(indicator[:loc+1]) * 1.0 / (loc+1)
         
         # 不考虑那些不属于任何一类的样本    
         if label_size > 0:
@@ -46,70 +49,25 @@ def average_precision(outputs, test_target):
     
     return Average_Precision
 
-def OneVsRest_multilabel(Classifier, **kwargs):
+def OneVsRest_multilabel(train_feature, train_label, test_feature, BinaryClassifier, **kwargs):
     """ multi-label classification
     """
     from sklearn.multiclass import OneVsRestClassifier
-    clf = OneVsRestClassifier(Classifier(**kwargs)).fit(model_train_feature, model_train_label)
+    clf = OneVsRestClassifier(BinaryClassifier(**kwargs)).fit(train_feature, train_label)
     
-    model_test_pred = clf.predict_proba(model_test_feature)
-    
-    clf = OneVsRestClassifier(Classifier(**kwargs)).fit(train_feature, train_label)
     train_pred = clf.predict_proba(train_feature)
     test_pred = clf.predict_proba(test_feature)
+        
+    return train_pred, test_pred
     
-    return model_test_pred, train_pred, test_pred
-    
-def transform(n_components, method = 'PCA'):
-    """ transform the dataset using PCA or CCA
+def save_multilabel_result(method_name, n_components, model_test_AP, test_pred):
+    """ Save result to file
     """
-    from sklearn.decomposition import PCA
-    #from sklearn.cross_decomposition import CCA
-    
-    pca = PCA(n_components).fit(train_feature)
-    
-    model_train_feature = pca.transform(model_train_feature)
-    model_test_feature = pca.transform(model_test_feature)
-    test_feature = pca.transform(test_feature)
-    
-if __name__ == '__main__':
-    import sys
-    n_components = int(sys.argv[1])
-    
-    # load dataset
-    f = open('task1-dataset/task1-dataset.pickle')
-    import pickle
-    # the following variables are accessed throughout this script, be careful
-    model_train_feature, model_train_label, model_test_feature, model_test_label, test_feature = pickle.load(f)
-    f.close()
-    
-    # construct the original train data
-    train_feature = np.vstack((model_train_feature, model_test_feature))
-    train_label = np.vstack((model_train_label, model_test_label))
-    
-    # apply PCA or CCA
-    transform(n_components)
-    
-    #from sklearn.naive_bayes import MultinomialNB
-    #method_name = 'MultinomialNB+OneVsRest'
-    #model_test_pred, train_pred, test_pred = OneVsRest_multilabel(MultinomialNB)
-    
-    #from sklearn.svm import SVC
-    #method_name = 'SVC+OneVsRest'
-    #model_test_pred, train_pred, test_pred = OneVsRest_multilabel(SVC, C = 5, gamma = 0.05, probability = True)
-    
-    method_name = 'kNN+OneVsRest'
-    from sklearn.neighbors import KNeighborsClassifier
-    model_test_pred, train_pred, test_pred = OneVsRest_multilabel(KNeighborsClassifier, k=1)
-    
-    model_test_AP = average_precision(model_test_pred, model_test_label)
-    print 'Model testing AP:', model_test_AP
-    train_AP = average_precision(train_pred, train_label)
-    print 'Model training AP:', train_AP
-    
     # save the final prediction
     index = 0
-    f = open('results/task1-%s-%d-%f-.csv' % (method_name, n_components, model_test_AP), 'w')
+    path = 'results/task1-%s-%d-%f-.csv' % (method_name, n_components, model_test_AP)
+    print 'Saving result to file: ', path
+    f = open(path, 'w')
     n = len(test_pred)
     for i in range(n):
         result = ','.join(str(x) for x in test_pred[i, :])
@@ -117,3 +75,62 @@ if __name__ == '__main__':
         index += 1
         
     f.close()
+
+if __name__ == '__main__':
+    import sys
+    n_components = int(sys.argv[1])
+    n_folds = int(sys.argv[2])
+    
+    # load dataset
+    f = open('task1-dataset/task1-dataset.pickle')
+    import pickle
+    # the following variables are accessed throughout this script, be careful
+    train_feature, train_label, test_feature = pickle.load(f)
+    f.close()
+    
+    # apply the PCA dimension reduction
+    train_feature, test_feature = PCA(train_feature, test_feature, 'task1-dataset/task1-PCA-decomp.mat')
+    train_feature = train_feature[:, :n_components]
+    test_feature = test_feature[:, :n_components]
+    
+    train_count, num_class = train_label.shape
+    
+    from sklearn.naive_bayes import GaussianNB as BinaryClassifier
+    method_name = 'GaussianNB+OneVsRest'
+    kwargs = {}
+    
+    #from sklearn.svm import SVC as BinaryClassifier
+    #method_name = 'SVC+OneVsRest'
+    # kwargs = {'C':5, 'gamma':0.05, 'probability':'True'}
+    
+    #method_name = 'kNN+OneVsRest'
+    #from sklearn.neighbors import KNeighborsClassifier as BinaryClassifier
+    #kwargs = {'k':1}
+    
+    print 'Method: ', method_name
+    from sklearn.cross_validation import KFold
+    kf = KFold(len(train_label), n_folds, indices=True)
+    index = 0
+    model_test_AP = [0] * n_folds
+    for train_index, test_index in kf:
+        print 'Prepare cv dataset: %d' % index
+        model_train_feature = train_feature[train_index, :]
+        model_test_feature = train_feature[test_index, :]
+        model_train_label = train_label[train_index, :]
+        model_test_label = train_label[test_index, :]
+        
+        print 'Train classifiers using the CLR method...'
+        train_pred, test_pred = OneVsRest_multilabel(model_train_feature, model_train_label, model_test_feature, BinaryClassifier, **kwargs)
+        
+        #import ipdb; ipdb.set_trace()
+        model_test_AP[index] = average_precision(test_pred, model_test_label)
+        print 'Model testing AP:', model_test_AP[index]
+        
+        index += 1
+    
+    avg_AP = sum(model_test_AP) / n_folds
+    print '\nAverage AP:', avg_AP
+    
+    print 'Train the whole dataset...'
+    train_pred, test_pred = OneVsRest_multilabel(train_feature, train_label, test_feature, BinaryClassifier, **kwargs)
+    save_multilabel_result(method_name, n_components, avg_AP, test_pred)
