@@ -9,7 +9,7 @@
 
 import numpy as np
 
-def PCA(train_feature, test_feature, mat_file_path):
+def PCA_transform(train_feature, test_feature, mat_file_path):
     """ Unsupervised dimension reduction
     Note: 由于scikit-learn中PCA无法针对目前的训练集进行PCA分解，所以这里采用matlab的分解结果
     """
@@ -29,8 +29,22 @@ def PCA(train_feature, test_feature, mat_file_path):
     W = np.asmatrix(mat_dict['COEFF'])
     
     # train_feature_transformed 包含所有的训练数据
-    train_feature_transformed = np.asmatrix(mat_dict['SCORE']) # 已经转换好的
+    #train_feature_transformed = np.asmatrix(mat_dict['train']) # 已经转换好的
+    #test_feature_transformed = np.asmatrix(mat_dict['test'])
+    
+    train_feature_transformed = np.asmatrix(train_feature) * W # or this one
     test_feature_transformed = np.asmatrix(test_feature) * W
+    
+    return train_feature_transformed, test_feature_transformed
+    
+def CCA_transform(train_feature, train_label, test_feature, n_components):
+    """ CCA: Canonical Correlation Analysis
+    """
+    from sklearn.cross_decomposition import CCA
+    cca = CCA(n_components).fit(train_feature, train_label)
+    
+    train_feature_transformed = cca.transform(train_feature)
+    test_feature_transformed = cca.transform(test_feature)
     
     return train_feature_transformed, test_feature_transformed
     
@@ -56,13 +70,7 @@ def main():
     dr_method = 'PCA'
     mat_file_path = 'task1-dataset/task1-PCA-decomp.mat'
     model_train_data2, model_test_data2, test_data2 = PCA(model_train_data, model_test_data, test_data, mat_file_path)
-        
-    # 保存降维后的结果
-    print 'Saving new datasets...'
-    import pickle
-    f = open('dataset/task2-PCA.pickle', 'w')
-    pickle.dump([model_train_data2, label_train, model_test_data2, label_test, test_data2], f)
-    f.close()
+    
 
 if __name__ == '__main__':
     main()
