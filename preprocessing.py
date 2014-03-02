@@ -20,18 +20,19 @@ def over_sampling(feature_data, label_data):
     for i in range(num_class):
         index = np.array(range(total))[label_data == i]
         new_index = np.random.choice(index, class_max_count)
-        index_list.extend(new_index)
+        index_list.extend(list(new_index))
     
     label_data.shape = (len(label_data), 1)
     data = np.hstack((feature_data, label_data))
     np.random.shuffle(index_list)
     new_data = data[index_list]
     
-    new_feature_data = data[:, :-1]
-    new_label = data[:, -1]
+    new_feature_data = new_data[:, :-1]
+    new_label = np.array(new_data[:, -1], int)
     
-    new_label2 = [0] * len(new_label)
-    for i in range(total):
+    new_total = len(new_label)
+    new_label2 = [0] * new_total
+    for i in range(new_total):
         new_label2[i] = new_label[i, 0]
         
     new_label2 = np.array(new_label2, int)

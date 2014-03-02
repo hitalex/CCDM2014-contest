@@ -24,6 +24,7 @@ class QDF(object):
     def transform_label(label_list):
         """ 将多类的类序号转换为以0开始的标签
         """
+        #import ipdb; ipdb.set_trace()
         class_labels = np.unique(label_list)
         num_class = len(class_labels)
         

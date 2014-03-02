@@ -5,6 +5,22 @@
 '''
 
 
+def predition2dict(pred):
+    """ Transform predictions to dict
+    """
+    #import ipdb; ipdb.set_trace()
+    _dict = {}
+    n = len(pred)
+    for i in range(n):
+        key = str(i)
+        if isinstance(pred[i], int):
+            _dict[key] = [str(pred[i])] # multi-class
+        else: 
+            _dict[key] = [str(v) for v in pred[i, :]] # multi-label
+            
+    return _dict
+
+
 # 说明：此函数用于解析上传文件的数据，封装为python的dict数据结构
 # 参数：filename为文件名
 def parse_file_v2(filename, closed=True):
@@ -197,6 +213,10 @@ def score_list2(submit, answer):
         is2_f1 = 2.0*is2_recall*is2_precision/(is2_recall+is2_precision)
 
     # print is0_precision, is0_recall, '===', is1_precision, is1_recall, '===', is2_precision, is2_recall
+    print '\nClass 0: precision = %f, recall = %f, F1 = %f' % (is0_precision, is0_recall, is0_f1)
+    print 'Class 1: precision = %f, recall = %f, F1 = %f' % (is1_precision, is1_recall, is1_f1)
+    print 'Class 2: precision = %f, recall = %f, F1 = %f\n' % (is2_precision, is2_recall, is2_f1)
+    
     # 平均
     f1 = (is0_f1 + is1_f1 + is2_f1)/3
     return f1
@@ -204,7 +224,7 @@ def score_list2(submit, answer):
 if __name__ == '__main__':
 
     # load answer
-    answer = parse_file_v2('answer.csv')
+    answer = parse_file_v2('example_task/example_task2.csv')
 
     # load predict
     submit = parse_file_v2('predict.csv')

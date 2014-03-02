@@ -6,7 +6,9 @@ Task1: Multi-label task
 
 import numpy as np
 
-from dimension_reduction import PCA
+from dimension_reduction import PCA_transform
+from evaluation import predition2dict
+from evaluation import score_list_v2 as caculate_AP_dict
 
 def average_precision(outputs, test_target):
     """ Example-based AP for multilable classification
@@ -89,7 +91,7 @@ if __name__ == '__main__':
     f.close()
     
     # apply the PCA dimension reduction
-    train_feature, test_feature = PCA(train_feature, test_feature, 'task1-dataset/task1-PCA-decomp.mat')
+    train_feature, test_feature = PCA_transform(train_feature, test_feature, 'task1-dataset/task1-PCA-decomp.mat')
     train_feature = train_feature[:, :n_components]
     test_feature = test_feature[:, :n_components]
     
@@ -101,7 +103,7 @@ if __name__ == '__main__':
     
     #from sklearn.svm import SVC as BinaryClassifier
     #method_name = 'SVC+OneVsRest'
-    # kwargs = {'C':5, 'gamma':0.05, 'probability':'True'}
+    #kwargs = {'C':5, 'gamma':0.05, 'probability':'True'}
     
     #method_name = 'kNN+OneVsRest'
     #from sklearn.neighbors import KNeighborsClassifier as BinaryClassifier
@@ -124,6 +126,7 @@ if __name__ == '__main__':
         
         #import ipdb; ipdb.set_trace()
         model_test_AP[index] = average_precision(test_pred, model_test_label)
+        #model_test_AP[index] = caculate_AP_dict(predition2dict(test_pred), predition2dict(model_test_label))
         print 'Model testing AP:', model_test_AP[index]
         
         index += 1
@@ -134,3 +137,5 @@ if __name__ == '__main__':
     print 'Train the whole dataset...'
     train_pred, test_pred = OneVsRest_multilabel(train_feature, train_label, test_feature, BinaryClassifier, **kwargs)
     save_multilabel_result(method_name, n_components, avg_AP, test_pred)
+    
+    

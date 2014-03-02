@@ -108,14 +108,23 @@ if __name__ == '__main__':
     
     train_count, num_class = train_label.shape
     
+    from sklearn.naive_bayes import GaussianNB as BinaryClassifier
+    method_name = 'CLR+NB'
+    kwdargs = {}
+    
     #from sklearn.svm import SVC as BinaryClassifier
     #method_name = 'CLR+SVM'
     #kwdargs = {'C':5, 'gamma':0.05}
     
-    from sklearn.neighbors import KNeighborsClassifier
-    method_name = 'CLR+kNN'
-    kwdargs = {'k':1}
+    #from sklearn.neighbors import KNeighborsClassifier as BinaryClassifier
+    #method_name = 'CLR+kNN'
+    #kwdargs = {'k':1}
     
+    #method_name = 'CLR+DT'
+    #from sklearn.tree import DecisionTreeClassifier as BinaryClassifier
+    #kwdargs = {'max_depth':20, 'min_samples_split':2}
+    
+    print 'Method: ', method_name
     from sklearn.cross_validation import KFold
     kf = KFold(len(train_label), n_folds, indices=True)
     index = 0
@@ -138,7 +147,7 @@ if __name__ == '__main__':
         index += 1
     
     avg_AP = sum(model_test_AP) / n_folds
-    print 'Average AP:', avg_AP
+    print '\nAverage AP:', avg_AP
     
     print 'Train the whole dataset...'
     classifier_matrix = calibrated_label_ranking_train(train_feature, train_label, BinaryClassifier, kwdargs)
