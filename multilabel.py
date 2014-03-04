@@ -126,6 +126,7 @@ if __name__ == '__main__':
         
         #import ipdb; ipdb.set_trace()
         model_test_AP[index] = average_precision(test_pred, model_test_label)
+        # use the evaluation metric provided by CCDM2014 host
         #model_test_AP[index] = caculate_AP_dict(predition2dict(test_pred), predition2dict(model_test_label))
         print 'Model testing AP:', model_test_AP[index]
         

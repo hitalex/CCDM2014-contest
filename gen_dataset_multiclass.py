@@ -24,6 +24,28 @@ def main():
     import pickle
     pickle.dump([train_feature, train_label, test_feature], f)
     f.close()
+    
+def scale_dataset():
+    """ 对每个特征（每列）进行归一化
+    """
+    f = open('task2-dataset/task2-dataset.pickle', 'r')
+    import pickle
+    train_feature, train_label, test_feature = pickle.load(f)
+    f.close()
+    
+    train_count, num_feature = train_feature.shape
+    feature_data = np.vstack((train_feature, test_feature))
+    
+    #from sklearn.preprocessing import scale
+    from sklearn.preprocessing import MinMaxScaler
+    feature_data = MinMaxScaler().fit_transform(feature_data)
+    
+    f = open('task2-dataset/task2-dataset-scaled.pickle', 'w')
+    import pickle
+    pickle.dump([feature_data[:train_count, :], train_label, feature_data[train_count:, :]], f)
+    f.close()
 
 if __name__ == '__main__':
-    main()
+    #main()
+    print 'Scale the dataset ...'
+    scale_dataset()

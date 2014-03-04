@@ -35,7 +35,7 @@ def PCA_transform(train_feature, test_feature, mat_file_path):
     train_feature_transformed = np.asmatrix(train_feature) * W # or this one
     test_feature_transformed = np.asmatrix(test_feature) * W
     
-    return train_feature_transformed, test_feature_transformed
+    return np.array(train_feature_transformed), np.array(test_feature_transformed)
     
 def CCA_transform(train_feature, train_label, test_feature, n_components):
     """ CCA: Canonical Correlation Analysis
@@ -45,6 +45,17 @@ def CCA_transform(train_feature, train_label, test_feature, n_components):
     
     train_feature_transformed = cca.transform(train_feature)
     test_feature_transformed = cca.transform(test_feature)
+    
+    return train_feature_transformed, test_feature_transformed
+    
+def ISOMAP_transform(train_feature, test_feature, n_components, n_neighbors = 5):
+    """ ISOMAP method
+    """
+    from sklearn.manifold import Isomap
+    isomap = Isomap(n_neighbors, n_components).fit(train_feature)
+    
+    train_feature_transformed = isomap.transform(train_feature)
+    test_feature_transformed = isomap.transform(test_feature)
     
     return train_feature_transformed, test_feature_transformed
     

@@ -213,9 +213,9 @@ def score_list2(submit, answer):
         is2_f1 = 2.0*is2_recall*is2_precision/(is2_recall+is2_precision)
 
     # print is0_precision, is0_recall, '===', is1_precision, is1_recall, '===', is2_precision, is2_recall
-    print '\nClass 0: precision = %f, recall = %f, F1 = %f' % (is0_precision, is0_recall, is0_f1)
-    print 'Class 1: precision = %f, recall = %f, F1 = %f' % (is1_precision, is1_recall, is1_f1)
-    print 'Class 2: precision = %f, recall = %f, F1 = %f\n' % (is2_precision, is2_recall, is2_f1)
+    #print '\nClass 0: precision = %f, recall = %f, F1 = %f' % (is0_precision, is0_recall, is0_f1)
+    #print 'Class 1: precision = %f, recall = %f, F1 = %f' % (is1_precision, is1_recall, is1_f1)
+    #print 'Class 2: precision = %f, recall = %f, F1 = %f\n' % (is2_precision, is2_recall, is2_f1)
     
     # 平均
     f1 = (is0_f1 + is1_f1 + is2_f1)/3

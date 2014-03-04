@@ -26,6 +26,7 @@ class LDF(object):
         """ LDF model
         First call QDF model to caculate the mean, cov_matirx
         """
+        #import ipdb; ipdb.set_trace()
         self.num_class, y_train, self.label_map = QDF.transform_label(y_train)
         qdf = QDF().fit(x_train, y_train)
         prior = qdf.prior
