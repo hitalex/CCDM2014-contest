@@ -33,8 +33,8 @@ def get_classifier_by_name(method_name, paras):
     if method_name == 'NB':
         from sklearn.naive_bayes import GaussianNB as Classifier
     elif method_name == 'SVM':
-        from sklearn.svm import LinearSVC as Classifier
-        kwargs = {'C': float(paras[0]), 'random_state':int(paras[1])}
+        from sklearn.svm import SVC as Classifier
+        kwargs = {'C':float(paras[0]), 'gamma':float(paras[1]), 'degree':int(paras[2]), 'random_state':0, 'kernel':'poly'}
     elif method_name == 'LDF':
         from LDF import LDF as Classifier
     elif method_name == 'QDF':
@@ -47,7 +47,7 @@ def get_classifier_by_name(method_name, paras):
         kwargs = {'k': int(paras[0]), 'delta0':float(paras[1])}
     elif method_name == 'DT':
         from sklearn.tree import DecisionTreeClassifier as Classifier
-        kwargs = {'max_depth':20, 'min_samples_split':30, 'random_state':0}
+        kwargs = {'max_depth':10, 'min_samples_split':30, 'random_state':0}
     elif method_name == 'kNN':
         from sklearn.neighbors import KNeighborsClassifier as Classifier
         kwargs = {'k':1}
@@ -79,7 +79,7 @@ def get_classifier_by_type(clftype, model_train_feature, model_train_label, Clas
         clf = OneVsRestClassifier(Classifier(**kwargs)).fit(model_train_feature, model_train_label)
     elif clftype == 'onevsone':
         from sklearn.multiclass import OneVsOneClassifier
-        clf = OneVsOneClassifier(Classifier(**kwargs)).fit(model_train_feature, model_train_label)
+        clf = OneVsOneClassifier(Classifier(**kwargs), n_jobs = -1).fit(model_train_feature, model_train_label)
     elif clftype == 'occ':
         from sklearn.multiclass import OutputCodeClassifier
         clf = OutputCodeClassifier(Classifier(**kwargs), code_size=2, random_state=0).fit(model_train_feature, model_train_label)
@@ -170,6 +170,7 @@ def multiclass(train_feature, train_label, test_feature, clftype, method_name, p
     
     print 'SMOTE over sampling...'
     train_feature, train_label = smote_sampling(train_feature, train_label)
+    
     print 'Train the whole multi-class classifiers...'
     clf = get_classifier_by_type(clftype, train_feature, train_label, Classifier, kwargs)
     train_pred = clf.predict(train_feature)
@@ -202,9 +203,14 @@ def main(n_components, n_folds, clftype, method_name, paras):
     #print 'Apply the CCA...'
     #train_feature, test_feature = CCA_transform(train_feature, train_label, test_feature, n_components)
     
-    print 'Apply the ISOMAP dimension reduction...'
-    train_feature, test_feature = ISOMAP_transform(train_feature, test_feature, n_components, 5)
+    #print 'Apply the ISOMAP dimension reduction...'
+    #train_feature, test_feature = ISOMAP_transform(train_feature, test_feature, n_components, 5)
     #ipdb.set_trace()
+    
+    # scale the data for each dimension
+    #import ipdb; ipdb.set_trace()
+    from preprocess_data import scale_dataset
+    train_feature, test_feature = scale_dataset(train_feature, test_feature)
     
     print 'Classifier type: %s, method: %s, paras = %r' % (clftype, method_name, paras)
     method_name, test_pred, avg_avg_f1_score = multiclass(train_feature, train_label, test_feature, clftype, method_name, paras)

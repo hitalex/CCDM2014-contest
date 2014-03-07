@@ -10,6 +10,21 @@ import numpy as np
 from numpy import genfromtxt
 from sklearn.preprocessing import OneHotEncoder
 
+def scale_dataset(train_feature, test_feature):
+    """ 对每个特征（每列）进行归一化
+    """    
+    train_count, num_feature = train_feature.shape
+    feature_data = np.vstack((train_feature, test_feature))
+    
+    #from sklearn.preprocessing import scale
+    from sklearn.preprocessing import MinMaxScaler
+    feature_data = MinMaxScaler().fit_transform(feature_data)
+    
+    train_feature = feature_data[:train_count, :]
+    test_feature = feature_data[train_count:, :]
+    
+    return train_feature, test_feature
+
 def main():
     train_path = '/home/kqc/dataset/CCDM2014/task2/train_data.csv'
     test_path = '/home/kqc/dataset/CCDM2014/task2/test_feature_data.csv'
@@ -28,6 +43,9 @@ def main():
     
     # 遍历所有的特征
     nominal_feature_index = []
+    numeric_feature_list = []
+    zeros_feature_list = []
+    one_zero_feature_list = []
     for i in range(num_feature):
         s = whole_data[:, i]
         # 特殊处理第400个和第407个特征
@@ -45,16 +63,20 @@ def main():
                 flag = True
                 break
         if flag:
+            numeric_feature_list.append(i)
             continue
         # s中只有0，不考虑
         elif max(s) == 0:
+            zeros_feature_list.append(i)
             continue
         # 如果该特征只有0和1两个取值，则同样不考虑
         elif min(s) == 0 and max(s) == 1:
+            one_zero_feature_list.append(i)
             continue
         else:  
             nominal_feature_index.append(i)
             
+    """        
     nominal_feature = np.array(whole_data[:, nominal_feature_index], dtype=int)
     # 在原始数据中删除nominal特征列
     numeric_feature = np.delete(whole_data, nominal_feature_index, 1)
@@ -67,15 +89,33 @@ def main():
     label_train = label_train.reshape((train_count, 1))
     train_data = np.hstack((whole_data[:train_count, :], label_train))
     test_data = whole_data[train_count:]
-    
+    """
     total, num_feature = whole_data.shape
     print 'Total:', total
     print 'Train:', train_count
     print 'Num of features:', num_feature
-    import ipdb; ipdb.set_trace()
-    print 'Saving processed results...'
-    np.savetxt("dataset/train2.csv", train_data, delimiter=",", fmt='%2f')
-    np.savetxt("dataset/test2.csv", test_data, delimiter=",", fmt='%2f')
+    print 'Num of zero features:', len(zeros_feature_list)
+    print 'Num of one_zero features:', len(one_zero_feature_list)
+    print 'Num of nominal features:', len(nominal_feature_index)
+    print 'Num of numeric features:', len(numeric_feature_list)
+    
+    import matplotlib.pyplot as plt
+    print 'Trying to find more nominal features:'
+    for i in numeric_feature_list:
+        s = np.unique(whole_data[:, i])
+        print 'Numeric feature:', i
+        print 'Number of distinct values:', len(s)
+        print s
+        plt.title('Feature index: %d, Distinct values: %d' % (i, len(s)))
+        plt.plot(np.sort(s), hold = False)
+        plt.savefig('numeric-feature-analysis/f%d.png' % i)
+        #plt.show()
+    
+    print 'List of numeric features:', numeric_feature_list
+    #import ipdb; ipdb.set_trace()
+    #print 'Saving processed results...'
+    #np.savetxt("dataset/train2.csv", train_data, delimiter=",", fmt='%2f')
+    #np.savetxt("dataset/test2.csv", test_data, delimiter=",", fmt='%2f')
 
 if __name__ == '__main__':
     main()
