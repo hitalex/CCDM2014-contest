@@ -50,14 +50,26 @@ def numeric2nominal(a):
         new_str_feature[i] = feature_desc[index]
         
     return feature_desc, new_str_feature
+    
+def write_header_file(feature_desc, base_path):
+    num_feature = len(feature_desc)
+    # 写入ARFF header file
+    fheader = open(base_path + 'task2-discretize-header', 'w')
+    fheader.write('@RELATION CCDM2014-Task2-Discretize\n\n')
+    for i in range(num_feature):
+        fheader.write('@ATTRIBUTE f%d %s\n' % (i, feature_desc[i]))
+        
+    fheader.write('@ATTRIBUTE class {0,1,2}\n\n')
+    fheader.write('@DATA\n')
+    fheader.close()
 
 def main():
     train_path = '/home/kqc/dataset/CCDM2014/task2/train_data.csv'
     test_path = '/home/kqc/dataset/CCDM2014/task2/test_feature_data.csv'
     
     # 以字符串的形式读入矩阵
-    train_data = genfromtxt(train_path, str, delimiter=',')
-    test_data = genfromtxt(test_path, str, delimiter=',')
+    train_data = genfromtxt(train_path, object, delimiter=',')
+    test_data = genfromtxt(test_path, object, delimiter=',')
     
     # 删除test data中的第一列，此列为样本的序号
     test_data = test_data[:, 1:]
@@ -75,7 +87,7 @@ def main():
     
     # 离散化的最大分支设定，如果不同的取值数超过此值，则不转换
     max_split = 50
-    num_feature = 409 # 不包含class属性
+    num_feature = 410 # 不包含class属性
     feature_desc = [''] * num_feature # 保存对该特征的描述，如'{1,2,3}'或'NUMERIC'，最终会写入到ARFF file header
     
     reduced_numeric_feature_list = [] # 最终的numeric特征列表
@@ -87,16 +99,27 @@ def main():
                 reduced_numeric_feature_list.append(i)
             else:
                 f = np.array(whole_data[:, i], float) # 原特征的数字表示方法
-                new_str_feature, f_desc_list = numeric2nominal(f)
+                f_desc_list, new_str_feature = numeric2nominal(f)
                 feature_desc[i] = '{' + ','.join(f_desc_list) + '}'
                 #print 'Feature:', i
                 #print feature_desc[i]
-                
+                whole_data[:, i] = new_str_feature # 重新给出nominal赋值
         else:
-            # 对nominal特征进行处理
-            feature_desc[i] = '{' + ','.join(s) + '}'
+            feature_desc[i] = '{' + ','.join(s) + '}' # 对nominal特征进行处理
             #print feature_desc[i]
     
+    whole_label = np.concatenate((label_train, ['0'] * (total-train_count)))
+    whole_label = np.array([whole_label]).T
+    whole_data = np.hstack((whole_data, whole_label))
+    print 'List of remaining numeric attributes:', reduced_numeric_feature_list
+    base_path = '/home/kqc/dataset/CCDM2014/task2/discretize/'
+    # write header files
+    print 'Writing ARFF header files...'
+    write_header_file(feature_desc, base_path)
+    
+    print 'Writing train and test data csv file...'
+    np.savetxt(base_path + 'train-data.csv', whole_data[:train_count, :], fmt='%s', delimiter=',')
+    np.savetxt(base_path + 'test-data.csv', whole_data[train_count:, :], fmt='%s', delimiter=',')
     
 if __name__ == '__main__':
     main()
